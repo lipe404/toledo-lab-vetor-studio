@@ -24,3 +24,4 @@ Para Vercel, importe o repositório como projeto Next.js sem definir `PAGES_BASE
 ## Crédito fotográfico
 
 A foto ilustrativa do estúdio é de [Vitaly Gariev no Unsplash](https://unsplash.com/photos/team-collaborating-around-a-whiteboard-in-an-office-CdTQI-Nh7J4), disponibilizada sob a [Unsplash License](https://unsplash.com/license). Não representa uma equipe ou cliente do projeto fictício.
+A foto da abertura é do mesmo fotógrafo: [Team collaborating around a whiteboard during a meeting](https://unsplash.com/photos/team-collaborating-around-a-whiteboard-during-a-meeting-rgKX4o2xSqI).

@@ -73,6 +73,10 @@ export default function Page() {
           <p>Organize entregas, acompanhe a capacidade da equipe e entenda o caixa do estúdio em um só lugar.</p>
           <a className="button" href="#demo">Explorar painel</a>
           <span className="under">Demo interativa. Não é necessário cadastro.</span>
+          <figure className="hero-photo">
+            <img src={(process.env.NEXT_PUBLIC_BASE_PATH ?? "")+"/planejamento.webp"} alt="Pessoas observando um colega que apresenta um planejamento no quadro" width="800" height="480" loading="eager" decoding="async"/>
+            <figcaption><span>ESTÚDIO EM FOCO</span> Criação e operação, na mesma mesa.</figcaption>
+          </figure>
         </div>
         <div className="demo" id="demo" aria-labelledby="demo-title">
           <div className="demo-top"><span id="demo-title">Painel Vetor</span><span className="sample">Dados de exemplo</span></div>
