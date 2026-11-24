@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type KeyboardEvent } from "react";
+import { useRef, useState, type KeyboardEvent } from "react";
 
 const views = [
   {label:"Produção", number:"24", unit:"entregas no mês", color:"#baf251",
@@ -71,6 +71,8 @@ function CapacityPlanner() {
   const [available, setAvailable] = useState("36");
   const [planned, setPlanned] = useState("24");
   const [incoming, setIncoming] = useState("8");
+  const [copyState, setCopyState] = useState<"idle"|"pending"|"copied"|"fallback">("idle");
+  const copyRequest=useRef(0);
   const entries = [
     { id:"available", label:"Horas disponíveis", value:available, update:setAvailable },
     { id:"planned", label:"Horas já comprometidas", value:planned, update:setPlanned },
@@ -86,6 +88,15 @@ function CapacityPlanner() {
     : balance<0 ? `Excesso de ${-balance} ${balance===-1?"hora":"horas"} nesta semana.`
     : balance===0 ? "Capacidade preenchida. Não sobram horas nesta semana."
     : `Sobram ${remaining} ${remaining===1?"hora":"horas"} nesta semana.`;
+  const weeklyCard = invalid ? "" : `Vetor Studio | Quadro de capacidade (demonstração)\nDisponíveis: ${available} h | Já comprometidas: ${planned} h | Novo projeto: ${incoming} h\n${summary}\nCenário fictício. Nenhuma informação foi enviada.\nFaça seu próprio cenário: https://lipe404.github.io/toledo-lab-vetor-studio/#planejador`;
+  function clearCopy(){copyRequest.current+=1;setCopyState("idle");}
+  async function copyWeeklyCard(){
+    if (!weeklyCard) return;
+    const request=++copyRequest.current;
+    setCopyState("pending");
+    try { await navigator.clipboard.writeText(weeklyCard); if(copyRequest.current===request)setCopyState("copied"); }
+    catch { if(copyRequest.current===request)setCopyState("fallback"); }
+  }
   return <section className="planner" id="planejador" aria-labelledby="planner-title">
     <div className="wrap planner-grid">
       <div className="planner-copy"><p className="kicker"><span/> FERRAMENTA INTERATIVA</p>
@@ -97,7 +108,7 @@ function CapacityPlanner() {
         <fieldset><legend>Monte um cenário de horas</legend><p id="hour-help">Use números inteiros de 0 a 999.</p>
           <div className="hours-list">
             {entries.map(entry=><label key={entry.id} htmlFor={entry.id}>{entry.label}
-              <span><input id={entry.id} type="number" inputMode="numeric" min="0" max="999" step="1" value={entry.value} onChange={event=>entry.update(event.target.value)} aria-invalid={!validNumber(entry.value)} aria-describedby="hour-help"/><b aria-hidden="true">h</b></span>
+              <span><input id={entry.id} type="number" inputMode="numeric" min="0" max="999" step="1" value={entry.value} onChange={event=>{entry.update(event.target.value);clearCopy();}} aria-invalid={!validNumber(entry.value)} aria-describedby="hour-help"/><b aria-hidden="true">h</b></span>
             </label>)}
           </div>
         </fieldset>
@@ -105,7 +116,12 @@ function CapacityPlanner() {
           <p role="status" aria-live="polite" aria-atomic="true">{summary}</p>
           {!invalid&&<><div className="capacity-meter" aria-hidden="true"><i style={{ width:(usePercent===null?(used>0?100:0):Math.min(100,usePercent))+"%" }}/></div><small>{usePercent===null?"Sem horas disponíveis para calcular o percentual.":`${usePercent}% da capacidade em uso.`}</small></>}
         </div>
-        <button type="button" className="reset-hours" onClick={()=>{setAvailable("36");setPlanned("24");setIncoming("8");}}>Restaurar exemplo</button>
+        <div className="planner-actions">
+          <button type="button" className="reset-hours" onClick={()=>{setAvailable("36");setPlanned("24");setIncoming("8");clearCopy();}}>Restaurar exemplo</button>
+          <button type="button" className="button" disabled={invalid||copyState==="pending"} onClick={copyWeeklyCard}>Copiar quadro da semana</button>
+        </div>
+        <p className="copy-status" role="status">{copyState==="copied"?"Quadro copiado. Você decide onde colar.":copyState==="fallback"?"Cópia automática indisponível. Selecione o quadro abaixo.":copyState==="pending"?"Preparando a cópia…":""}</p>
+        {copyState==="fallback"&&weeklyCard&&<textarea className="copy-fallback" readOnly rows={4} value={weeklyCard} aria-label="Quadro da semana pronto para copiar"/>}
       </div>
     </div>
   </section>;
@@ -140,10 +156,10 @@ export default function Page() {
       <section className="hero wrap" aria-labelledby="title">
         <div className="hero-copy">
           <p className="kicker"><span/> CONCEITO DE SOFTWARE PARA EQUIPES CRIATIVAS</p>
-          <h1 id="title">Dê direção<br className="wide"/> ao <em>trabalho.</em></h1>
-          <p>Organize entregas, acompanhe a capacidade da equipe e entenda o caixa do estúdio em um só lugar.</p>
-          <a className="button" href="#demo">Explorar painel</a>
-          <span className="under">Demo interativa. Não é necessário cadastro.</span>
+          <h1 id="title">O trabalho cabe<br className="wide"/> na <em>semana?</em></h1>
+          <p>Para estúdios criativos que precisam dizer sim ou não a um projeto sem sobrecarregar a equipe. Compare as horas e leve uma decisão clara para a reunião.</p>
+          <div className="hero-actions"><a className="button" href="#planejador">Simular minha semana</a><a className="secondary-action" href="#demo">Ver painel de exemplo</a></div>
+          <span className="under">Teste com números fictícios. Sem cadastro ou integração.</span>
           <figure className="hero-photo">
             <img src={(process.env.NEXT_PUBLIC_BASE_PATH ?? "")+"/planejamento.webp"} alt="Pessoas observando um colega que apresenta um planejamento no quadro" width="800" height="480" loading="eager" decoding="async"/>
             <figcaption><span>ESTÚDIO EM FOCO</span> Criação e operação, na mesma mesa.</figcaption>

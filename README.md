@@ -29,3 +29,9 @@ A foto da abertura é do mesmo fotógrafo: [Team collaborating around a whiteboa
 ## Experiência e acessibilidade
 
 A demonstração inclui um simulador de horas com validação, indicação textual de saldo e restauração do exemplo. Os indicadores têm tabela de dados equivalente. Os botões dos indicadores funcionam com Tab/Enter e também com as setas esquerda/direita, Home e End. A página respeita a preferência do sistema por menos movimento. Os estados são temporários e nenhum valor informado é enviado.
+
+## Jornada de crescimento (plano, sem rastreamento)
+
+- Proposta: testar se um novo projeto cabe na agenda de um pequeno estúdio. A ação principal abre o simulador sem cadastro.
+- Ativação: editar um exemplo válido e entender o saldo semanal. Retenção e recomendação: levar o quadro copiável à reunião e voltar para simular a próxima semana. A cópia depende de ação explícita; não envia mensagens nem grava histórico.
+- Experimento futuro: comparar “Simular minha semana” com “Ver se o projeto cabe”. Se houvesse consentimento e instrumentação, comparar decisões válidas por visita e cópias por decisão; acompanhar erros de campo como proteção. Nada disso é coletado na demo e não há evidência de resultado.
