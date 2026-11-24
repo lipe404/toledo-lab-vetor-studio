@@ -149,7 +149,7 @@ export default function Page() {
   return <>
     <a className="skip" href="#conteudo">Pular para o conteúdo</a>
     <header className="top"><div className="wrap top-inner">
-      <a className="brand" href="#conteudo"><span className="mark" aria-hidden="true">↗</span> vetor<span className="brand-sub">studio</span></a>
+      <a className="brand brand-masthead" href="#conteudo"><img className="brand-image" src={(process.env.NEXT_PUBLIC_BASE_PATH ?? "") + "/brand-lockup.webp"} alt="Vetor Studio" width="640" height="160" decoding="async" /></a>
       <nav aria-label="Navegação principal"><a href="#recursos">Recursos</a><a className="nav-cta" href="#planejador">Simular semana</a></nav>
     </div></header>
     <main id="conteudo" tabIndex={-1}>
@@ -221,6 +221,6 @@ export default function Page() {
         </div>
       </section>
     </main>
-    <footer className="footer"><div className="wrap"><span>Vetor Studio</span><a href="#recursos">Conhecer recursos</a><p>Projeto conceitual de portfólio. Marca, produto e indicadores fictícios.</p></div></footer>
+    <footer className="footer"><div className="wrap"><img className="brand-image brand-footer" src={(process.env.NEXT_PUBLIC_BASE_PATH ?? "") + "/brand-lockup-inverse.webp"} alt="Vetor Studio" width="640" height="160" decoding="async" /><a href="#recursos">Conhecer recursos</a><p>Projeto conceitual de portfólio. Marca, produto e indicadores fictícios.</p></div></footer>
   </>;
 }
