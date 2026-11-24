@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type KeyboardEvent } from "react";
 
 const views = [
   {label:"Produção", number:"24", unit:"entregas no mês", color:"#baf251",
@@ -53,6 +53,77 @@ function Icon({name}:{name:string}) {
   </svg>;
 }
 
+function chooseMetric(event: KeyboardEvent<HTMLDivElement>, setMode: (index: number) => void) {
+  if (!(event.target instanceof HTMLButtonElement)) return;
+  const buttons = Array.from(event.currentTarget.querySelectorAll("button"));
+  const active = buttons.indexOf(event.target);
+  const directions: Record<string, number> = { ArrowLeft: -1, ArrowRight: 1 };
+  const next = event.key === "Home" ? 0
+    : event.key === "End" ? views.length-1
+    : event.key in directions ? (active + directions[event.key] + views.length) % views.length : -1;
+  if (next < 0) return;
+  event.preventDefault();
+  setMode(next);
+  buttons[next]?.focus();
+}
+
+function CapacityPlanner() {
+  const [available, setAvailable] = useState("36");
+  const [planned, setPlanned] = useState("24");
+  const [incoming, setIncoming] = useState("8");
+  const entries = [
+    { id:"available", label:"Horas disponíveis", value:available, update:setAvailable },
+    { id:"planned", label:"Horas já comprometidas", value:planned, update:setPlanned },
+    { id:"incoming", label:"Horas do novo projeto", value:incoming, update:setIncoming },
+  ];
+  const validNumber = (value:string) => /^(?:0|[1-9]\d{0,2})$/.test(value);
+  const invalid=entries.some(entry=>!validNumber(entry.value));
+  const used=Number(planned)+Number(incoming);
+  const balance=Number(available)-used;
+  const remaining=Math.max(0,balance);
+  const usePercent=Number(available)>0 ? Math.round(100*used/Number(available)) : null;
+  const summary=invalid ? "Preencha os três campos com números inteiros entre 0 e 999."
+    : balance<0 ? `Excesso de ${-balance} ${balance===-1?"hora":"horas"} nesta semana.`
+    : balance===0 ? "Capacidade preenchida. Não sobram horas nesta semana."
+    : `Sobram ${remaining} ${remaining===1?"hora":"horas"} nesta semana.`;
+  return <section className="planner" id="planejador" aria-labelledby="planner-title">
+    <div className="wrap planner-grid">
+      <div className="planner-copy"><p className="kicker"><span/> FERRAMENTA INTERATIVA</p>
+        <h2 id="planner-title">Simulador de capacidade semanal</h2>
+        <p>Uma nova entrega cabe no calendário? Compare o tempo disponível da equipe com o trabalho já assumido e o novo pedido.</p>
+        <p>Os números mudam só nesta página. Use valores fictícios para explorar.</p>
+      </div>
+      <div className="planner-card">
+        <fieldset><legend>Monte um cenário de horas</legend><p id="hour-help">Use números inteiros de 0 a 999.</p>
+          <div className="hours-list">
+            {entries.map(entry=><label key={entry.id} htmlFor={entry.id}>{entry.label}
+              <span><input id={entry.id} type="number" inputMode="numeric" min="0" max="999" step="1" value={entry.value} onChange={event=>entry.update(event.target.value)} aria-invalid={!validNumber(entry.value)} aria-describedby="hour-help"/><b aria-hidden="true">h</b></span>
+            </label>)}
+          </div>
+        </fieldset>
+        <div className="capacity-result" data-state={invalid?"invalid":balance<0?"over":"fits"}>
+          <p role="status" aria-live="polite" aria-atomic="true">{summary}</p>
+          {!invalid&&<><div className="capacity-meter" aria-hidden="true"><i style={{ width:(usePercent===null?(used>0?100:0):Math.min(100,usePercent))+"%" }}/></div><small>{usePercent===null?"Sem horas disponíveis para calcular o percentual.":`${usePercent}% da capacidade em uso.`}</small></>}
+        </div>
+        <button type="button" className="reset-hours" onClick={()=>{setAvailable("36");setPlanned("24");setIncoming("8");}}>Restaurar exemplo</button>
+      </div>
+    </div>
+  </section>;
+}
+
+function NumberTable({mode}:{mode:number}){
+  const view=views[mode];
+  const unit=mode===0?"entregas":mode===1?"%":"mil reais";
+  return <details className="chart-data">
+    <summary>Ver dados em tabela</summary>
+    <table><caption>{view.label} ilustrativa em quatro semanas</caption>
+      <thead><tr><th scope="col">Amostra</th><th scope="col">Valor ({unit})</th></tr></thead>
+      <tbody>{view.values.map((value, index)=><tr key={index}><th scope="row">Semana {Math.floor(index/4)+1}, ponto {index%4+1}</th><td>{value}</td></tr>)}</tbody>
+    </table>
+    <p>Leituras fictícias do painel, não medições de uma equipe real.</p>
+  </details>;
+}
+
 export default function Page() {
   const [mode,setMode]=useState(0);
   const view=views[mode];
@@ -63,9 +134,9 @@ export default function Page() {
     <a className="skip" href="#conteudo">Pular para o conteúdo</a>
     <header className="top"><div className="wrap top-inner">
       <a className="brand" href="#conteudo"><span className="mark" aria-hidden="true">↗</span> vetor<span className="brand-sub">studio</span></a>
-      <nav aria-label="Navegação principal"><a href="#recursos">Recursos</a><a className="nav-cta" href="#demo">Abrir demo</a></nav>
+      <nav aria-label="Navegação principal"><a href="#recursos">Recursos</a><a className="nav-cta" href="#planejador">Simular semana</a></nav>
     </div></header>
-    <main id="conteudo">
+    <main id="conteudo" tabIndex={-1}>
       <section className="hero wrap" aria-labelledby="title">
         <div className="hero-copy">
           <p className="kicker"><span/> CONCEITO DE SOFTWARE PARA EQUIPES CRIATIVAS</p>
@@ -81,7 +152,7 @@ export default function Page() {
         <div className="demo" id="demo" aria-labelledby="demo-title">
           <div className="demo-top"><span id="demo-title">Painel Vetor</span><span className="sample">Dados de exemplo</span></div>
           <div className="demo-core">
-            <div className="choices" role="group" aria-label="Escolha um indicador">
+            <div className="choices" role="group" aria-label="Escolha um indicador" onKeyDown={event=>chooseMetric(event,setMode)}>
               {views.map((entry,i)=><button key={entry.label} type="button" aria-pressed={mode===i} onClick={()=>setMode(i)}>{entry.label}</button>)}
             </div>
             <div className="value" aria-live="polite"><strong key={mode}>{view.number}</strong><span>{view.unit}</span></div>
@@ -92,10 +163,11 @@ export default function Page() {
               <path key={mode} className="trace" d={line} pathLength="1" stroke={view.color} strokeWidth="2.7" fill="none" vectorEffect="non-scaling-stroke" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
             <div className="axis" aria-hidden="true"><span>Semana 1</span><span>Semana 2</span><span>Semana 3</span><span>Semana 4</span></div>
-            <p className="hint">{view.text}</p>
+            <p className="hint">{view.text}</p><NumberTable mode={mode} />
           </div>
         </div>
       </section>
+      <CapacityPlanner />
       <section className="wrap resources" id="recursos" aria-labelledby="resource-title">
         <p className="kicker dark"><span/> O QUE VOCÊ VÊ NO PAINEL</p>
         <h2 id="resource-title">Saiba o que cabe<br/> na próxima semana.</h2>
@@ -133,6 +205,6 @@ export default function Page() {
         </div>
       </section>
     </main>
-    <footer className="footer"><div className="wrap"><span>Vetor Studio</span><p>Projeto conceitual de portfólio. Marca, produto e indicadores fictícios.</p></div></footer>
+    <footer className="footer"><div className="wrap"><span>Vetor Studio</span><a href="#recursos">Conhecer recursos</a><p>Projeto conceitual de portfólio. Marca, produto e indicadores fictícios.</p></div></footer>
   </>;
 }
